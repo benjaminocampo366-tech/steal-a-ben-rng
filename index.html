@@ -250,11 +250,27 @@
     }
 
     .card:hover { transform: translateY(-4px); border-color: #9c6240; }
+    .selectable-card { cursor: pointer; }
+    .selectable-card:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
     .card-head { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
     .card-icon { font-size: 48px; line-height: 1; filter: drop-shadow(0 9px 10px #0005); }
     .card-image { width: 68px; height: 58px; object-fit: contain; }
     .card-index { color: #73675e; font-size: 11px; font-weight: 800; }
-    .card h2 { margin: 27px 0 7px; font-size: 17px; letter-spacing: -.025em; }
+    .card-title-row { display: flex; align-items: center; gap: 8px; margin: 27px 0 7px; }
+    .card-title-row h2 { flex: 1; min-width: 0; margin: 0; font-size: 17px; letter-spacing: -.025em; }
+    .stock-count {
+      display: grid;
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border: 1px solid #d3ef795c;
+      border-radius: 9px;
+      background: #d3ef7916;
+      color: var(--lime);
+      font-size: 14px;
+      font-weight: 900;
+    }
     .tag {
       display: inline-flex;
       padding: 6px 9px;
@@ -275,6 +291,46 @@
       color: var(--muted);
       text-align: center;
     }
+
+    .card-hint { display: block; margin-top: 12px; color: var(--muted); font-size: 11px; }
+    .mutation-dialog {
+      width: min(440px, calc(100vw - 32px));
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--panel);
+      color: var(--ink);
+      box-shadow: 0 24px 70px #0008;
+    }
+
+    .mutation-dialog::backdrop { background: #080604bd; backdrop-filter: blur(4px); }
+    .mutation-form { padding: 24px; }
+    .dialog-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .dialog-close {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: transparent;
+      color: var(--ink);
+      font-size: 20px;
+    }
+
+    .mutation-dialog h2 { margin-bottom: 9px; font-size: 25px; letter-spacing: -.04em; }
+    .dialog-copy { margin-bottom: 21px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .dialog-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .dialog-actions .primary { flex: 1; }
+    .secondary {
+      min-height: 50px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .mutation-feedback { min-height: 20px; margin: 15px 0 0; color: var(--lime); font-size: 13px; }
 
     .notice {
       margin-top: 25px;
@@ -310,7 +366,7 @@
       .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
       .card { min-height: 205px; padding: 13px; }
       .card-icon { font-size: 40px; }
-      .card h2 { font-size: 14px; }
+      .card-title-row h2 { font-size: 14px; }
       .topbar { align-items: start; flex-direction: column; }
     }
 
@@ -379,6 +435,46 @@
       <aside class="notice">Esta es una selección inicial de personajes conocidos, no el catálogo completo del juego. <em>Steal a Brainrot</em> recibe actualizaciones y su colección puede cambiar.</aside>
       <footer>Hecho para fans · Brainrot Club no está afiliado con Roblox ni con los creadores del juego.</footer>
     </section>
+    <dialog class="mutation-dialog" id="mutationDialog" aria-labelledby="mutationTitle">
+      <form class="mutation-form" id="mutationForm">
+        <div class="dialog-top">
+          <div class="brand">Tralalero Tralala</div>
+          <button class="dialog-close" id="closeMutation" type="button" aria-label="Cerrar">×</button>
+        </div>
+        <h2 id="mutationTitle">¿Qué mutación quieres?</h2>
+        <p class="dialog-copy">Elige una mutación y cuántas unidades quieres. Hay 3 unidades disponibles.</p>
+        <div class="field">
+          <label for="mutationName">Mutación</label>
+          <select id="mutationName" name="mutation" required>
+            <option>Default</option>
+            <option>Gold</option>
+            <option>Diamond</option>
+            <option>Bloodrot</option>
+            <option>Candy</option>
+            <option>Lava</option>
+            <option>Galaxy</option>
+            <option>Yin Yang</option>
+            <option>Radioactive</option>
+            <option>Cursed</option>
+            <option>Rainbow</option>
+            <option>Divine</option>
+            <option>Cyber</option>
+            <option>Phantom</option>
+            <option>Crystal</option>
+            <option>Eclipse</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="unitCount">¿Cuántas unidades quieres?</label>
+          <input id="unitCount" name="units" type="number" min="1" step="1" value="1" required>
+        </div>
+        <div class="dialog-actions">
+          <button class="secondary" id="cancelMutation" type="button">Cerrar</button>
+          <button class="primary" type="submit">Confirmar</button>
+        </div>
+        <p class="mutation-feedback" id="mutationFeedback" aria-live="polite"></p>
+      </form>
+    </dialog>
   </main>
 
   <script>
@@ -413,7 +509,22 @@
     const cards = document.getElementById("cards");
     const filters = document.getElementById("filters");
     const search = document.getElementById("search");
+    const mutationDialog = document.getElementById("mutationDialog");
+    const mutationForm = document.getElementById("mutationForm");
+    const mutationName = document.getElementById("mutationName");
+    const unitCount = document.getElementById("unitCount");
+    const mutationFeedback = document.getElementById("mutationFeedback");
+    const tralaleroStock = 3;
     let activeCategory = "Todos";
+
+    function openMutationDialog() {
+      mutationName.value = "Default";
+      unitCount.max = String(tralaleroStock);
+      unitCount.value = "1";
+      mutationFeedback.textContent = "";
+      mutationDialog.showModal();
+      mutationName.focus();
+    }
 
     function showCatalog(profile) {
       document.getElementById("userName").textContent = profile.name;
@@ -480,13 +591,52 @@
         head.append(icon, index);
         const title = document.createElement("h2");
         title.textContent = item.name;
+        const titleRow = document.createElement("div");
+        titleRow.className = "card-title-row";
+        titleRow.append(title);
+        const isTralalero = item.name === "Tralalero Tralala";
+        if (isTralalero) {
+          const stock = document.createElement("span");
+          stock.className = "stock-count";
+          stock.textContent = String(tralaleroStock);
+          stock.setAttribute("aria-label", `${tralaleroStock} unidades disponibles`);
+          stock.title = `${tralaleroStock} unidades disponibles`;
+          titleRow.append(stock);
+        }
         const tag = document.createElement("span");
         tag.className = "tag";
         tag.textContent = item.category;
-        card.append(head, title, tag);
+        card.append(head, titleRow, tag);
+        if (isTralalero) {
+          card.classList.add("selectable-card");
+          card.tabIndex = 0;
+          card.setAttribute("role", "button");
+          card.setAttribute("aria-label", "Elegir una mutación para Tralalero Tralala");
+          const hint = document.createElement("span");
+          hint.className = "card-hint";
+          hint.textContent = "Toca para elegir una mutación";
+          card.append(hint);
+          card.addEventListener("click", openMutationDialog);
+          card.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              openMutationDialog();
+            }
+          });
+        }
         cards.append(card);
       });
     }
+
+    document.getElementById("closeMutation").addEventListener("click", () => mutationDialog.close());
+    document.getElementById("cancelMutation").addEventListener("click", () => mutationDialog.close());
+    mutationForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const mutation = mutationName.value;
+      const units = Number(unitCount.value);
+      if (!Number.isSafeInteger(units) || units < 1 || units > tralaleroStock) return;
+      mutationFeedback.textContent = `¡Elegiste ${units} ${units === 1 ? "unidad" : "unidades"} de Tralalero Tralala con mutación ${mutation}!`;
+    });
 
     welcomeForm.addEventListener("submit", (event) => {
       event.preventDefault();
